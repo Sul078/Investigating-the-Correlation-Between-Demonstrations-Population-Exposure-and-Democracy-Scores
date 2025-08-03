@@ -14,6 +14,22 @@ except FileNotFoundError:
     st.error("Error: 'analysis_results_2021_2023.csv' not found. Please ensure the file is in the correct directory.")
     st.stop()
 
+# Add ISO-3 codes
+iso3_map = {
+    'Belgium': 'BEL', 'France': 'FRA', 'Germany': 'DEU', 'Italy': 'ITA',
+    'Netherlands': 'NLD', 'Poland': 'POL', 'Kazakhstan': 'KAZ', 'Kyrgyzstan': 'KGZ',
+    'Uzbekistan': 'UZB', 'Tajikistan': 'TJK', 'Turkmenistan': 'TKM'
+}
+df['iso_alpha'] = df['country_name'].map(iso3_map)
+
+# Centroids for Scattergeo
+centroids = {
+    'Belgium': (50.85, 4.35), 'France': (46.6, 1.88), 'Germany': (51.17, 10.45), 'Italy': (41.87, 12.57),
+    'Netherlands': (52.13, 5.29), 'Poland': (51.92, 19.14), 'Kazakhstan': (48.02, 66.92),
+    'Kyrgyzstan': (41.20, 74.76), 'Uzbekistan': (41.38, 64.59), 'Tajikistan': (38.86, 71.28),
+    'Turkmenistan': (38.97, 59.56)
+}
+
 # Title and description
 st.title("Conflict Risk in Europe & Central Asia (2021–2023)")
 st.markdown("""
@@ -26,21 +42,62 @@ st.sidebar.header("Filters")
 years = sorted(df['year'].unique())
 selected_year = st.sidebar.selectbox("Select Year", years, index=len(years)-1)
 
-# Filtering data for the selected year
+# Filter data for selected year
 df_year = df[df['year'] == selected_year]
 
-# Choropleth map
-st.header(f"Conflict Events by Country ({selected_year})")
-fig_map = px.choropleth(
-    df_year,
-    locations="iso_alpha",
-    color="TOTAL_FATALITIES",
-    hover_name="country_name",
-    hover_data=["PEACEFUL_PROTESTS", "VIOLENT_PROTESTS", "DEMOCRACY_SCORE"],
-    color_continuous_scale=px.colors.sequential.Reds,
-    title=f"Total Fatalities by Country ({selected_year})"
+# Choropleth map with Scattergeo
+st.header(f"Democracy Score by Country ({selected_year})")
+fig_map = go.Figure()
+for yr in years:
+    df_yr = df[df['year'] == yr]
+    lat, lon, text = [], [], []
+    for _, row in df_yr.iterrows():
+        ylat, ylon = centroids.get(row['country_name'], (0, 0))
+        lat.append(ylat)
+        lon.append(ylon)
+        text.append(
+            f"<b>{row['country_name']} — {yr}</b><br>"
+            f"🗳️ Democracy Score: {row['DEMOCRACY_SCORE']:.3f}<br>"
+            f"Peaceful Protests: {row['PEACEFUL_PROTESTS']}<br>"
+            f"Violent Protests: {row['VIOLENT_PROTESTS']}<br>"
+            f"Fatalities: {row['TOTAL_FATALITIES']}<br>"
+            f"Violent %: {row['VIOLENT_FREQ_PERCENT']:.1f}%<br>"
+            f"Correlation: {row['CORRELATION']:.2f}"
+        )
+    fig_map.add_trace(go.Choropleth(
+        locations=df_yr['iso_alpha'],
+        z=df_yr['DEMOCRACY_SCORE'],
+        locationmode='ISO-3',
+        colorscale='Viridis',
+        colorbar_title='Democracy Score',
+        zmin=df['DEMOCRACY_SCORE'].min(),
+        zmax=df['DEMOCRACY_SCORE'].max(),
+        hoverinfo='skip',
+        visible=(yr == selected_year)
+    ))
+    fig_map.add_trace(go.Scattergeo(
+        lat=lat,
+        lon=lon,
+        mode='markers',
+        marker=dict(size=13, color='white', line=dict(color='black', width=2)),
+        text=text,
+        hoverinfo='text',
+        name=str(yr),
+        visible=(yr == selected_year)
+    ))
+
+fig_map.update_layout(
+    geo=dict(
+        projection_type="mercator",
+        showcoastlines=False,
+        showland=True,
+        landcolor="rgb(229, 229, 229)",
+        showcountries=True,
+        countrycolor="LightGray",
+        lataxis_range=[30, 60],
+        lonaxis_range=[-15, 90]
+    )
 )
-fig_map.update_layout(geo=dict(showframe=False, projection_type="mercator"))
 st.plotly_chart(fig_map, use_container_width=True)
 
 # Time series for selected country
@@ -65,16 +122,32 @@ fig_ts.update_layout(
 )
 st.plotly_chart(fig_ts, use_container_width=True)
 
+# Scatter Plot (Violent % vs Democracy Score)
+st.header("Violent Protest Frequency vs. Democracy Score")
+fig_scatter = px.scatter(
+    df_year,
+    x='DEMOCRACY_SCORE',
+    y='VIOLENT_FREQ_PERCENT',
+    color='country_name',
+    size='TOTAL_FATALITIES',
+    hover_name='country_name',
+    title=f"Violent Protest Frequency vs. Democracy Score ({selected_year})",
+    labels={
+        'DEMOCRACY_SCORE': 'Democracy Score',
+        'VIOLENT_FREQ_PERCENT': '% Violent Protests'
+    }
+)
+st.plotly_chart(fig_scatter, use_container_width=True)
+
 # Policy brief download
 st.header("Policy Brief")
-policy_brief_path = "policy_brief.pdf"
-if os.path.exists(policy_brief_path):
-    with open(policy_brief_path, "rb") as file:
+if os.path.exists("policy_brief (2).pdf"):
+    with open("policy_brief (2).pdf", "rb") as file:
         st.download_button(
             label="Download Policy Brief",
             data=file,
-            file_name="policy_brief.pdf",
+            file_name="policy_brief (2).pdf",
             mime="application/pdf"
         )
 else:
-    st.warning("Policy brief PDF not found. Please add 'policy_brief.pdf' to the directory.")
+    st.warning("Policy brief PDF not found. Please add 'policy_brief (2).pdf' to the directory.")
