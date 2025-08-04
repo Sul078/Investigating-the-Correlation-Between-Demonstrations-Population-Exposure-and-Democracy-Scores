@@ -31,10 +31,12 @@ centroids = {
 }
 
 # Title and description
-st.title("Conflict Risk in Europe & Central Asia (2021–2023)")
+st.title("Protest Dynamics and Democracy Score in Europe & Central Asia")
 st.markdown("""
-    This dashboard analyzes conflict events (protests, riots, etc.) and their correlation with democracy scores
-    across 11 countries in Europe and Central Asia from 2021 to 2023. Use the filters to explore trends.
+    This repository contains an interactive  dashboard analyzing protests dynamic (violent, peaceful, etc.) 
+    and their correlation with democracy scores in 11 countries across Europe and Central Asia (2021–2023).
+    The dashboard features an animated choropleth map, time series trends, and a policy brief.
+    Use the filters to explore trends.
 """)
 
 # Sidebar for year selection
