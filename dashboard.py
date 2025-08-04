@@ -141,13 +141,13 @@ st.plotly_chart(fig_scatter, use_container_width=True)
 
 # Policy brief download
 st.header("Policy Brief")
-if os.path.exists("policy_brief (2).pdf"):
-    with open("policy_brief (2).pdf", "rb") as file:
+if os.path.exists("poliicy_brief.pdf"):
+    with open("poliicy_brief.pdf", "rb") as file:
         st.download_button(
             label="Download Policy Brief",
             data=file,
-            file_name="policy_brief (2).pdf",
+            file_name="poliicy_brief.pdf",
             mime="application/pdf"
         )
 else:
-    st.warning("Policy brief PDF not found. Please add 'policy_brief (2).pdf' to the directory.")
+    st.warning("Policy brief PDF not found. Please add 'poliicy_brief.pdf' to the directory.")
