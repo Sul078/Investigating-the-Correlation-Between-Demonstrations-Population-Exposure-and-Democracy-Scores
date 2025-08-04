@@ -142,7 +142,7 @@ st.plotly_chart(fig_scatter, use_container_width=True)
 # Policy brief download
 st.header("Policy Brief")
 if os.path.exists("policy_brief.pdf"):
-    with open("poliicy_brief.pdf", "rb") as file:
+    with open("policy_brief.pdf", "rb") as file:
         st.download_button(
             label="Download Policy Brief",
             data=file,
