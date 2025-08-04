@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import os
 
 # Setting page configuration
-st.set_page_config(page_title="Conflict Risk Dashboard", layout="wide")
+st.set_page_config(page_title="Protest Dynamics and Democracy (2021–2023)", layout="wide")
 
 # Loading data
 try:
